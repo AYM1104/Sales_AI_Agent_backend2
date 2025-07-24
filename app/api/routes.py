@@ -43,10 +43,8 @@ async def search_company(
         result = await company_service.analyze_company(request)
         return result
     except Exception as e:
-        return CompanySearchResponse(
-            success=False,
-            error_message=f"APIサーバーエラー: {str(e)}"
-        )
+        # Gemini API などで発生した例外は500で返す
+        raise HTTPException(status_code=500, detail=f"APIサーバーエラー: {str(e)}")
 
 
 @router.get("/debug/env-direct")
