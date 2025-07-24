@@ -1,10 +1,11 @@
 import os
 from typing import List
 from dotenv import load_dotenv
+from pydantic import BaseSettings
 
 load_dotenv()
 
-class Settings:
+class Settings(BaseSettings):
     """アプリケーション設定"""
     
     # API設定
@@ -18,8 +19,10 @@ class Settings:
         "https://sales-ai-agent-frontend.vercel.app",
     ]
     
-    # Gemini設定
-    GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+    # Gemini設定（BaseSettings経由で環境変数から取得）
+    GOOGLE_API_KEY: str
+    GEMINI_MODEL_NAME: str = "gemini-2.5-pro"
+    
     if not GOOGLE_API_KEY:
         raise ValueError("GOOGLE_API_KEY not found")
 
