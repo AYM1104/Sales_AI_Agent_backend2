@@ -225,33 +225,101 @@ class GeminiService:
         job_scope: str
     ) -> str:
         """仮説を生成"""
-        prompt_template = self._load_prompt("hypothesis_prompt.txt")
-        prompt = prompt_template.replace("{securities_report_summary}", summary)
-        prompt = prompt.replace("{department_name}", department_name)
-        prompt = prompt.replace("{position_title}", position_name)
-        prompt = prompt.replace("{job_scope}", job_scope)
+        try:
+            print(f"=== generate_hypothesis 開始 ===")
+            print(f"部署名: {department_name}")
+            print(f"役職: {position_name}")
+            print(f"業務範囲: {job_scope}")
+            
+            # YAMLファイル読み込み
+            yaml_data = self._load_yaml_prompt("hypothesis_prompt.yml")
+            print(f"hypothesis_prompt.yml 読み込み成功")
+            
+            # プロンプトテンプレート取得
+            prompt_template = yaml_data["hypothesis_prompt"]["template"]
+            
+            # 変数置換
+            prompt = prompt_template.replace("{securities_report_summary}", summary)
+            prompt = prompt.replace("{department_name}", department_name)
+            prompt = prompt.replace("{position_name}", position_name)
+            prompt = prompt.replace("{job_scope}", job_scope)
+
+            print(f"最終プロンプト準備完了: {len(prompt)} 文字")
+            
+            # Gemini API呼び出し
+            print("Gemini API呼び出し開始（仮説生成）...")
+            response = self.model.generate_content(prompt)
+            
+            if not response.text:
+                raise Exception("仮説生成でレスポンスが空でした")
+            
+            print(f"仮説生成完了: {len(response.text)} 文字")
+            return response.text
         
-        response = self.model.generate_content(prompt)
-        return response.text
+        except Exception as e:
+            print(f"generate_hypothesis エラー: {e}")
+            print(f"エラータイプ: {type(e)}")
+            import traceback
+            print(f"スタックトレース: {traceback.format_exc()}")
+            raise
+
+
+
+
+        # """仮説を生成"""
+        # prompt_template = self._load_prompt("hypothesis_prompt.txt")
+        # prompt = prompt_template.replace("{securities_report_summary}", summary)
+        # prompt = prompt.replace("{department_name}", department_name)
+        # prompt = prompt.replace("{position_title}", position_name)
+        # prompt = prompt.replace("{job_scope}", job_scope)
+        
+        # response = self.model.generate_content(prompt)
+        # return response.text
     
     async def match_solutions(self, hypothesis: str, solutions: List[Solution]) -> str:
         """ソリューションマッチング"""
-        prompt_template = self._load_prompt("solution_matching_prompt.txt")
-        
-        solutions_text = "\n".join([
-            f"・{s.name}：{s.features}（用途：{s.use_case}）"
-            for s in solutions
-        ])
-        
-        prompt = prompt_template.replace("{hypothesis}", hypothesis)
-        prompt = prompt.replace("{solutions}", solutions_text)
-
-        print(f"[ソリューションマッチング] プロンプト文字数: {len(prompt)} 文字")
-        
-        response = self.model.generate_content(prompt)
-        print(f"[ソリューションマッチング] Gemini応答文字数: {len(response.text) if response.text else 0} 文字")
-        
-        return response.text
+        try:
+            print(f"=== match_solutions 開始 ===")
+            print(f"ソリューション数: {len(solutions)}")
+            
+            # YAMLファイル読み込み
+            yaml_data = self._load_yaml_prompt("solution_matching_prompt.yml")
+            print(f"solution_matching_prompt.yml 読み込み成功")
+            
+            # プロンプトテンプレート取得
+            if "matching_prompt" not in yaml_data or "template" not in yaml_data["matching_prompt"]:
+                raise Exception("solution_matching_prompt.yml の構造が正しくありません")
+            
+            prompt_template = yaml_data["matching_prompt"]["template"]
+            
+            # ソリューション情報をテキスト化
+            solutions_text = "\n".join([
+                f"・{s.name}：{s.features}（用途：{s.use_case}）"
+                for s in solutions
+            ])
+            
+            # 変数置換
+            prompt = prompt_template.replace("{hypothesis}", hypothesis)
+            prompt = prompt.replace("{solutions}", solutions_text)
+            
+            print(f"[ソリューションマッチング] プロンプト文字数: {len(prompt)} 文字")
+            
+            # Gemini API呼び出し
+            print("Gemini API呼び出し開始（ソリューションマッチング）...")
+            response = self.model.generate_content(prompt)
+            
+            if not response.text:
+                raise Exception("ソリューションマッチングでレスポンスが空でした")
+            
+            print(f"[ソリューションマッチング] Gemini応答文字数: {len(response.text)} 文字")
+            return response.text
+            
+        except Exception as e:
+            print(f"match_solutions エラー: {e}")
+            print(f"エラータイプ: {type(e)}")
+            import traceback
+            print(f"スタックトレース: {traceback.format_exc()}")
+            raise
     
     async def generate_hearing_items(
         self,
@@ -261,19 +329,45 @@ class GeminiService:
         hypothesis: str
     ) -> str:
         """ヒアリング項目を生成"""
-        prompt_template = self._load_prompt("hearing_prompt.txt")
-        
-        prompt = prompt_template.replace("{company_name}", company_name)
-        prompt = prompt.replace("{department_name}", department_name)
-        prompt = prompt.replace("{position_name}", position_name)
-        prompt = prompt.replace("{company_size}", "")
-        prompt = prompt.replace("{industry}", "")
-        prompt = prompt.replace("{hypothesis}", hypothesis)
-
-        print(f"[ヒアリング生成] プロンプト文字数: {len(prompt)} 文字")
-        
-        response = self.model.generate_content(prompt)
-
-        print(f"[ヒアリング生成] Gemini応答文字数: {len(response.text) if response.text else 0} 文字")
-
-        return response.text
+        try:
+            print(f"=== generate_hearing_items 開始 ===")
+            print(f"企業名: {company_name}")
+            print(f"部署名: {department_name}")
+            print(f"役職: {position_name}")
+            
+            # YAMLファイル読み込み
+            yaml_data = self._load_yaml_prompt("hearing_prompt.yml")
+            print(f"hearing_prompt.yml 読み込み成功")
+            
+            # プロンプトテンプレート取得
+            if "hearing_prompt" not in yaml_data or "template" not in yaml_data["hearing_prompt"]:
+                raise Exception("hearing_prompt.yml の構造が正しくありません")
+            
+            prompt_template = yaml_data["hearing_prompt"]["template"]
+            
+            # 変数置換
+            prompt = prompt_template.replace("{company_name}", company_name)
+            prompt = prompt.replace("{department_name}", department_name)
+            prompt = prompt.replace("{position_name}", position_name)
+            prompt = prompt.replace("{company_size}", "")  # 空文字で置換
+            prompt = prompt.replace("{industry}", "")      # 空文字で置換
+            prompt = prompt.replace("{hypothesis}", hypothesis)
+            
+            print(f"[ヒアリング生成] プロンプト文字数: {len(prompt)} 文字")
+            
+            # Gemini API呼び出し
+            print("Gemini API呼び出し開始（ヒアリング項目生成）...")
+            response = self.model.generate_content(prompt)
+            
+            if not response.text:
+                raise Exception("ヒアリング項目生成でレスポンスが空でした")
+            
+            print(f"[ヒアリング生成] Gemini応答文字数: {len(response.text)} 文字")
+            return response.text
+            
+        except Exception as e:
+            print(f"generate_hearing_items エラー: {e}")
+            print(f"エラータイプ: {type(e)}")
+            import traceback
+            print(f"スタックトレース: {traceback.format_exc()}")
+            raise
