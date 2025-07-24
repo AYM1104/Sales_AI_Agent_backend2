@@ -4,8 +4,10 @@ from google.generativeai import GenerativeModel
 import google.generativeai as genai
 from dotenv import load_dotenv
 
+from app.config import Settings
+
 load_dotenv()
-print("GOOGLE_API_KEY:", os.getenv("GOOGLE_API_KEY"))
+
 
 app = FastAPI(title="Gemini Test API")
 
