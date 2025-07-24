@@ -21,6 +21,10 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
+    @app.get("/")
+    def root():
+        return {"message": "App is running"}
+
     # ★ここに追加 - 起動時イベント
     @app.on_event("startup")
     async def startup_event():
