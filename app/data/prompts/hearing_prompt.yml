@@ -7,8 +7,8 @@ hearing_prompt:
     企業名：{company_name}
     部署：{department_name}
     役職：{position_name}
-    企業規模：{company_size}（従業員数など、分かれば）
-    業界：{industry}（分かれば）
+    企業規模：※有価証券報告書をもとに推定してください（従業員数など）
+    業界：※有価証券報告書から推定される業界を記載してください
 
     【課題仮説】
     {hypothesis}

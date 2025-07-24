@@ -253,8 +253,10 @@ class GeminiService:
             if not response.text:
                 raise Exception("仮説生成でレスポンスが空でした")
             
-            print(f"仮説生成完了: {len(response.text)} 文字")
-            return response.text
+            hypothesis_text = response.text
+            
+            print(f"仮説生成完了: {len(hypothesis_text)} 文字")
+            return hypothesis_text
         
         except Exception as e:
             print(f"generate_hypothesis エラー: {e}")
@@ -326,7 +328,7 @@ class GeminiService:
         company_name: str,
         department_name: str,
         position_name: str,
-        hypothesis: str
+        hypothesis_text: str
     ) -> str:
         """ヒアリング項目を生成"""
         try:
@@ -349,9 +351,9 @@ class GeminiService:
             prompt = prompt_template.replace("{company_name}", company_name)
             prompt = prompt.replace("{department_name}", department_name)
             prompt = prompt.replace("{position_name}", position_name)
-            prompt = prompt.replace("{company_size}", "")  # 空文字で置換
-            prompt = prompt.replace("{industry}", "")      # 空文字で置換
-            prompt = prompt.replace("{hypothesis}", hypothesis)
+            prompt = prompt.replace("{company_size}", "※有価証券報告書をもとに推定してください")
+            prompt = prompt.replace("{industry}", "※報告書から業界を判断してください")
+            prompt = prompt.replace("{hypothesis}", hypothesis_text)
             
             print(f"[ヒアリング生成] プロンプト文字数: {len(prompt)} 文字")
             
