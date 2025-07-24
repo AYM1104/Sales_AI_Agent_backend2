@@ -110,12 +110,12 @@ class GeminiService:
             
             # YAML設定ファイル名とステップ名のリスト（順序重要）
             yaml_steps = [
-                ("company_analysis_step1.yml", "step1"),
-                ("company_analysis_step2.yml", "step2"), 
-                ("company_analysis_step3.yml", "step3"),
-                ("company_analysis_step4.yml", "step4"),
-                ("company_analysis_step5.yml", "step5"),
-                ("company_analysis_step6.yml", "step6")
+                ("company_analysis_prompts/company_analysis_step1.yml", "step1"),
+                ("company_analysis_prompts/company_analysis_step2.yml", "step2"), 
+                ("company_analysis_prompts/company_analysis_step3.yml", "step3"),
+                ("company_analysis_prompts/company_analysis_step4.yml", "step4"),
+                ("company_analysis_prompts/company_analysis_step5.yml", "step5"),
+                ("company_analysis_prompts/company_analysis_step6.yml", "step6")
             ]
             
             current_text = full_text[:settings.MAX_PDF_CHARS]
