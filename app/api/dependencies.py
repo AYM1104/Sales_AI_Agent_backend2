@@ -2,9 +2,9 @@ from fastapi import Depends, HTTPException, status
 from typing import Annotated
 import logging
 from app.config import settings
-# from app.services.company_service import CompanyService
+from app.services.company_service import CompanyService
 from app.services.solution_service import SolutionService
-# from app.services.gemini_service import GeminiService
+from app.services.gemini_service import GeminiService
 
 logger = logging.getLogger(__name__)
 
@@ -20,17 +20,17 @@ async def verify_api_key():
     return True
 
 # Service dependencies
-# async def get_company_service() -> CompanyService:
-#     """CompanyServiceの依存性注入"""
-#     return CompanyService()
+async def get_company_service() -> CompanyService:
+    """CompanyServiceの依存性注入"""
+    return CompanyService()
 
 async def get_solution_service() -> SolutionService:
     """SolutionServiceの依存性注入"""
     return SolutionService()
 
-# async def get_gemini_service() -> GeminiService:
-#     """GeminiServiceの依存性注入"""
-#     return GeminiService()
+async def get_gemini_service() -> GeminiService:
+    """GeminiServiceの依存性注入"""
+    return GeminiService()
 
 # Rate limiting (将来的な拡張用)
 class RateLimiter:
@@ -62,7 +62,7 @@ async def validate_company_name(company_name: str):
 
 # Common dependencies
 ApiKeyDep = Annotated[bool, Depends(verify_api_key)]
-# CompanyServiceDep = Annotated[CompanyService, Depends(get_company_service)]
+CompanyServiceDep = Annotated[CompanyService, Depends(get_company_service)]
 SolutionServiceDep = Annotated[SolutionService, Depends(get_solution_service)]
-# GeminiServiceDep = Annotated[GeminiService, Depends(get_gemini_service)]
+GeminiServiceDep = Annotated[GeminiService, Depends(get_gemini_service)]
 RateLimitDep = Annotated[bool, Depends(RateLimiter())]
