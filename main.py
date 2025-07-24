@@ -1,4 +1,6 @@
 from fastapi import FastAPI
+import os
+
 
 app = FastAPI()
 
@@ -6,6 +8,8 @@ app = FastAPI()
 def root():
     return {"message": "FastAPI is alive!"}
 
+
+print(f"PORT: {os.environ.get('PORT')}")
 
 
 # from fastapi import FastAPI
