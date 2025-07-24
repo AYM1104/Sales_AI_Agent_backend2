@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     
     # Gemini設定（BaseSettings経由で環境変数から取得）
     GOOGLE_API_KEY: str = os.getenv("GOOGLE_API_KEY")
-    GEMINI_MODEL_NAME: str = "gemini-2.5-pro"
+    GEMINI_MODEL_NAME: str = "gemini-2.5-flash"
 
     if not GOOGLE_API_KEY:
         raise ValueError("GOOGLE_API_KEY not found")
