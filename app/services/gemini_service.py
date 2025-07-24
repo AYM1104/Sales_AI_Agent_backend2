@@ -245,8 +245,12 @@ class GeminiService:
         
         prompt = prompt_template.replace("{hypothesis}", hypothesis)
         prompt = prompt.replace("{solutions}", solutions_text)
+
+        print(f"[ソリューションマッチング] プロンプト文字数: {len(prompt)} 文字")
         
         response = self.model.generate_content(prompt)
+        print(f"[ソリューションマッチング] Gemini応答文字数: {len(response.text) if response.text else 0} 文字")
+        
         return response.text
     
     async def generate_hearing_items(
