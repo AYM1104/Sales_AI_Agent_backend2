@@ -14,7 +14,11 @@ class SolutionMatchRequest(BaseModel):
     hypothesis: str = Field(..., description="仮説", min_length=1)
 
 # レスポンスモデル
-
+class Solution(BaseModel):
+    """ソリューション情報"""
+    name: str = Field(..., description="ソリューション名")
+    features: str = Field(..., description="特徴")
+    use_case: str = Field(..., description="用途")
 
 class CompanySearchResponse(BaseModel):
     """企業検索レスポンス"""
@@ -24,12 +28,6 @@ class CompanySearchResponse(BaseModel):
     hearing_items: Optional[str] = Field("", description="ヒアリング項目")
     matching_result: Optional[str] = Field("", description="マッチング結果")
     error_message: Optional[str] = Field("", description="エラーメッセージ")
-
-class Solution(BaseModel):
-    """ソリューション情報"""
-    name: str = Field(..., description="ソリューション名")
-    features: str = Field(..., description="特徴")
-    use_case: str = Field(..., description="用途")
 
 class SolutionsResponse(BaseModel):
     """ソリューション一覧レスポンス"""
