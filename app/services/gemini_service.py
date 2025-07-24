@@ -1,7 +1,8 @@
 import os
+import yaml
 import fitz  # PyMuPDF
 import requests
-from typing import List
+from typing import List, Dict, Any
 from google.generativeai import GenerativeModel
 import google.generativeai as genai
 from app.config import settings
@@ -32,11 +33,51 @@ class GeminiService:
         
         print("=== GeminiService初期化完了 ===")
     
+    def _load_yaml_prompt(self, filename: str) -> Dict[str, Any]:
+        """YAMLプロンプトファイルを読み込み"""
+        filepath = os.path.join(settings.PROMPTS_DIR, filename)
+        with open(filepath, "r", encoding="utf-8") as f:
+            return yaml.safe_load(f)
+    
     def _load_prompt(self, filename: str) -> str:
         """プロンプトファイルを読み込み"""
         filepath = os.path.join(settings.PROMPTS_DIR, filename)
         with open(filepath, "r", encoding="utf-8") as f:
             return f.read()
+    
+    def _build_prompt_from_yaml(self, yaml_data: Dict[str, Any], step_name: str, **kwargs) -> str:
+        """YAMLデータからプロンプトを構築"""
+        prompt_parts = []
+        
+        # commonセクションの処理
+        if "common" in yaml_data:
+            common = yaml_data["common"]
+            
+            # intro（導入部分）
+            if "intro" in common:
+                intro = common["intro"]
+                # 変数の置換
+                for key, value in kwargs.items():
+                    intro = intro.replace(f"{{{key}}}", str(value))
+                prompt_parts.append(intro)
+            
+            # instructions（指示）
+            if "instructions" in common:
+                instructions = common["instructions"]
+                # 変数の置換
+                for key, value in kwargs.items():
+                    instructions = instructions.replace(f"{{{key}}}", str(value))
+                prompt_parts.append(instructions)
+        
+        # ステップ固有の内容
+        if step_name in yaml_data:
+            step_content = yaml_data[step_name]
+            # 変数の置換
+            for key, value in kwargs.items():
+                step_content = step_content.replace(f"{{{key}}}", str(value))
+            prompt_parts.append(step_content)
+        
+        return "\n\n".join(prompt_parts)
    
     async def summarize_securities_report(self, pdf_url: str, company_name: str) -> str:
         """有価証券報告書を要約"""
@@ -58,29 +99,113 @@ class GeminiService:
             
             # 3. テキスト抽出
             print("テキスト抽出開始...")
-            text = ""
+            full_text = ""
             for page in doc:
-                text += page.get_text()
-            print(f"テキスト抽出成功: {len(text)} 文字")
+                full_text += page.get_text()
+            print(f"テキスト抽出成功: {len(full_text)} 文字")
+
+
+            # 4. 段階的要約実行
+            print("段階的要約開始...")
             
-            # 4. プロンプトファイルを読み込む
-            print("プロンプト読み込み開始...")
-            prompt_template = self._load_prompt("prompt.txt")
-            print(f"プロンプトテンプレート読み込み成功: {len(prompt_template)} 文字")
+            # YAML設定ファイル名とステップ名のリスト（順序重要）
+            yaml_steps = [
+                ("company_analysis_step1.yml", "step1"),
+                ("company_analysis_step2.yml", "step2"), 
+                ("company_analysis_step3.yml", "step3"),
+                ("company_analysis_step4.yml", "step4"),
+                ("company_analysis_step5.yml", "step5"),
+                ("company_analysis_step6.yml", "step6")
+            ]
             
-            prompt_text = prompt_template.replace("[企業名を入力]", company_name) + "\n" + text[:settings.MAX_PDF_CHARS]
-            print(f"最終プロンプト準備完了: {len(prompt_text)} 文字")
-            print(f"MAX_PDF_CHARS設定: {settings.MAX_PDF_CHARS}")
+            current_text = full_text[:settings.MAX_PDF_CHARS]
+            step_results = {}
             
-            # 5. Gemini APIで要約を取得
-            print("Gemini API呼び出し開始...")
-            print(f"使用モデル: {settings.GEMINI_MODEL_NAME}")
+            for i, (yaml_file, step_name) in enumerate(yaml_steps, 1):
+                print(f"--- ステップ {i}: {yaml_file} ({step_name}) 実行開始 ---")
+                
+                try:
+                    # YAMLファイル読み込み
+                    yaml_data = self._load_yaml_prompt(yaml_file)
+                    print(f"YAML読み込み成功: {yaml_file}")
+                    
+                    # プロンプト構築
+                    prompt = self._build_prompt_from_yaml(
+                        yaml_data,
+                        step_name,
+                        company_name=company_name,
+                        securities_report=current_text,
+                        previous_results=step_results
+                    )
+                    
+                    # プロンプトにデータを追加
+                    if i == 1:
+                        # 最初のステップでは元のテキストを使用
+                        final_prompt = prompt + "\n\n## 分析対象の有価証券報告書\n" + current_text
+                    else:
+                        # 2ステップ目以降は前のステップの結果も含める
+                        context = "\n".join([f"### ステップ{j}の結果\n{result}" 
+                                           for j, result in step_results.items()])
+                        final_prompt = prompt + "\n\n## 前のステップの分析結果\n" + context + "\n\n## 元の有価証券報告書（参考）\n" + current_text[:10000]
+                    
+                    print(f"最終プロンプト準備完了: {len(final_prompt)} 文字")
+                    
+                    # Gemini API呼び出し
+                    print(f"Gemini API呼び出し開始（ステップ{i}）...")
+                    response = self.model.generate_content(final_prompt)
+                    
+                    if not response.text:
+                        raise Exception(f"ステップ{i}でレスポンスが空でした")
+                    
+                    step_results[i] = response.text
+                    print(f"ステップ{i}完了: {len(response.text)} 文字")
+                    
+                    # 次のステップのために結果を現在のテキストとして設定
+                    if i < len(yaml_steps):
+                        current_text = response.text
+                    
+                except Exception as e:
+                    print(f"ステップ{i}でエラー: {e}")
+                    print(f"エラータイプ: {type(e)}")
+                    raise Exception(f"ステップ{i}（{yaml_file}）の処理中にエラーが発生しました: {e}")
             
-            response = self.model.generate_content(prompt_text)
-            print("Gemini API呼び出し成功")
-            print(f"レスポンス取得: {len(response.text) if response.text else 0} 文字")
+            print("=== 段階的要約完了 ===")
+
+            # 最終結果を返す（最後のステップの結果）
+            final_result = step_results[len(yaml_steps)]
+            print(f"最終結果: {len(final_result)} 文字")
             
-            return response.text
+            return final_result
+
+
+
+
+
+
+
+
+
+
+
+            
+            # # 4. プロンプトファイルを読み込む
+            # print("プロンプト読み込み開始...")
+            # prompt_template = self._load_prompt("prompt.txt")
+            # print(f"プロンプトテンプレート読み込み成功: {len(prompt_template)} 文字")
+            
+            # prompt_text = prompt_template.replace("[企業名を入力]", company_name) + "\n" + text[:settings.MAX_PDF_CHARS]
+            # print(f"最終プロンプト準備完了: {len(prompt_text)} 文字")
+            # print(f"MAX_PDF_CHARS設定: {settings.MAX_PDF_CHARS}")
+            
+            # # 5. Gemini APIで要約を取得
+            # print("Gemini API呼び出し開始...")
+            # print(f"使用モデル: {settings.GEMINI_MODEL_NAME}")
+            
+            # response = self.model.generate_content(prompt_text)
+            # print("Gemini API呼び出し成功")
+            # print(f"レスポンス取得: {len(response.text) if response.text else 0} 文字")
+            
+            # return response.text
             
         except requests.RequestException as e:
             print(f"PDFダウンロードエラー: {e}")
