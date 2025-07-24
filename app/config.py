@@ -39,6 +39,6 @@ class Settings(BaseSettings):
     SOLUTIONS_FILE: str = "app/data/solutions.json"
     
     # PDF処理設定
-    MAX_PDF_CHARS: int = 90000
+    MAX_PDF_CHARS: int = 10000
 
 settings = Settings()
