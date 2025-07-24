@@ -265,6 +265,11 @@ class GeminiService:
         prompt = prompt.replace("{company_size}", "")
         prompt = prompt.replace("{industry}", "")
         prompt = prompt.replace("{hypothesis}", hypothesis)
+
+        print(f"[ヒアリング生成] プロンプト文字数: {len(prompt)} 文字")
         
         response = self.model.generate_content(prompt)
+
+        print(f"[ヒアリング生成] Gemini応答文字数: {len(response.text) if response.text else 0} 文字")
+
         return response.text
