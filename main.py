@@ -5,6 +5,7 @@ import google.generativeai as genai
 from dotenv import load_dotenv
 
 from app.config import Settings
+from app.api.routes import router
 
 load_dotenv()
 
@@ -123,6 +124,9 @@ IT・デジタル投資：システム関連投資の記載
             "company": company_name,
             "error": str(e)
         }
+    
+# ルーターを登録
+    app.include_router(router)
 
 if __name__ == "__main__":
     import uvicorn
