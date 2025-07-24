@@ -2,10 +2,7 @@ from fastapi import APIRouter, HTTPException
 import json
 from app.config import settings
 from app.models.schemas import (
-    CompanySearchRequest,
-    CompanySearchResponse,
     SolutionsResponse,
-    HealthResponse
 )
 from app.api.dependencies import (
     ApiKeyDep,
