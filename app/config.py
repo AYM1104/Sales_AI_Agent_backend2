@@ -1,7 +1,7 @@
 import os
 from typing import List
 from dotenv import load_dotenv
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings
 
 load_dotenv()
 
@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     # Gemini設定（BaseSettings経由で環境変数から取得）
     GOOGLE_API_KEY: str
     GEMINI_MODEL_NAME: str = "gemini-2.5-pro"
-    
+
     if not GOOGLE_API_KEY:
         raise ValueError("GOOGLE_API_KEY not found")
 
