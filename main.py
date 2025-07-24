@@ -14,7 +14,7 @@ if not GOOGLE_API_KEY:
     raise ValueError("GOOGLE_API_KEY not found")
 
 genai.configure(api_key=GOOGLE_API_KEY)
-model = GenerativeModel("gemini-1.5-pro")  # まず安定版で
+model = GenerativeModel("gemini-2.5-pro")  # まず安定版で
 
 @app.get("/")
 async def root():
