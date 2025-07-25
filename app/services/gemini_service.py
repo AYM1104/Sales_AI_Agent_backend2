@@ -171,9 +171,23 @@ class GeminiService:
             
             print("=== 段階的要約完了 ===")
 
-            # 最終結果を返す（最後のステップの結果）
-            final_result = step_results[len(yaml_steps)]
-            print(f"最終結果: {len(final_result)} 文字")
+            # 🔽 各ステップごとにセクション形式でまとめて出力
+            print("要約セクションを構築中...")
+            
+            sections = []
+            for i in range(1, len(yaml_steps) + 1):
+                step_name = yaml_steps[i - 1][1]
+                title = f"## Step {i}: {step_name} の要約"
+                content = step_results.get(i, "(このステップの出力はありません)")
+                sections.append(f"{title}\n\n{content}")
+            
+            final_result = "\n\n---\n\n".join(sections)
+            
+            print(f"要約セクション構築完了: {len(final_result)} 文字")
+
+            # # 最終結果を返す（最後のステップの結果）
+            # final_result = step_results[len(yaml_steps)]
+            # print(f"最終結果: {len(final_result)} 文字")
             
             return final_result
 
